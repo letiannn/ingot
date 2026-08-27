@@ -53,7 +53,6 @@ doc = "Namespace metadata (required first class)"
     type = "string"
     max_size = 12
     default = "0.0.1"
-    read_only = true
 
 [[classes]]
 id = "status"
@@ -129,7 +128,6 @@ doc = "Battery status readings and thresholds"
     doc = "Reserve SOC to maintain for cleanout"
     helpers = true
     thread_safe = true
-    persistent = true
 
     [classes.keys.defaults]
     peabodyv0 = 0
@@ -217,7 +215,6 @@ doc = "Battery status readings and thresholds"
     default = 0
     helpers = true
     thread_safe = true
-    persistent = true
 
     [[classes.keys]]
     id = "pf_status"

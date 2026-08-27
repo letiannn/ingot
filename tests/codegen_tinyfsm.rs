@@ -41,7 +41,7 @@ fn emit_tinyfsm_generates_event_structs_and_dispatch_switch() {
         "--emit-tinyfsm",
     ]);
 
-    let hpp = read(&out.join("dm_key_events.hpp"));
+    let hpp = read(&out.join("api/dm_key_events.hpp"));
     assert!(
         hpp.contains("#include \"tinyfsm.hpp\""),
         "missing include:\n{hpp}"
@@ -51,13 +51,13 @@ fn emit_tinyfsm_generates_event_structs_and_dispatch_switch() {
         "missing empty event struct:\n{hpp}"
     );
 
-    let wrapper_h = read(&out.join("dm_key_events_wrapper.hpp"));
+    let wrapper_h = read(&out.join("api/dm_key_events_wrapper.hpp"));
     assert!(
         wrapper_h.contains("void send_tinyfsm_event_by_key(uint32_t key_id);"),
         "missing wrapper decl:\n{wrapper_h}"
     );
 
-    let wrapper_c = read(&out.join("dm_key_events_wrapper.cpp"));
+    let wrapper_c = read(&out.join("api/dm_key_events_wrapper.cpp"));
     assert!(
         wrapper_c.contains("#include \"fsmlist.hpp\""),
         "wrapper must include the consumer seam:\n{wrapper_c}"
@@ -85,9 +85,9 @@ fn without_flag_no_cxx_artifacts_are_emitted() {
     ]);
 
     for f in [
-        "dm_key_events.hpp",
-        "dm_key_events_wrapper.hpp",
-        "dm_key_events_wrapper.cpp",
+        "api/dm_key_events.hpp",
+        "api/dm_key_events_wrapper.hpp",
+        "api/dm_key_events_wrapper.cpp",
     ] {
         assert!(
             !out.join(f).exists(),
@@ -126,10 +126,10 @@ fn emit_tinyfsm_with_no_event_keys_emits_nothing() {
     ]);
 
     assert!(
-        !out.join("dm_key_events.hpp").exists(),
+        !out.join("api/dm_key_events.hpp").exists(),
         "a model with zero event keys must emit no event header even with the flag on"
     );
-    assert!(!out.join("dm_key_events_wrapper.cpp").exists());
+    assert!(!out.join("api/dm_key_events_wrapper.cpp").exists());
 
     let _ = fs::remove_dir_all(&dir);
 }

@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "dm.h"
+#include "api/dm.h"
 
 #ifdef __cplusplus
 extern "C" {

@@ -23,7 +23,7 @@ endif()
 
 add_executable(tinyfsm_dispatch
     main.cpp
-    ${GEN_DIR}/dm_key_events_wrapper.cpp
+    ${GEN_DIR}/api/dm_key_events_wrapper.cpp
 )
 target_include_directories(tinyfsm_dispatch PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}   # fsmlist.hpp — the consumer seam

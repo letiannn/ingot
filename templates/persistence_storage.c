@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "persistence_storage.h"
-#include "key_definitions.h"
+#include "api/key_definitions.h"
 
 /* ---- Packed persistence struct ---- */
 

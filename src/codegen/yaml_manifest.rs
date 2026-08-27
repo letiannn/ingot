@@ -139,8 +139,8 @@ pub fn generate_yaml_manifest(
     };
 
     let yaml = serde_yaml::to_string(&manifest)?;
-    std::fs::write(output_dir.join("dm_full.yaml"), yaml)?;
-    log::info!("Generated dm_full.yaml");
+    std::fs::write(output_dir.join("schema/dm_full.yaml"), yaml)?;
+    log::info!("Generated schema/dm_full.yaml");
 
     Ok(())
 }
@@ -174,7 +174,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         generate_yaml_manifest(&model, 0, dir.path()).unwrap();
 
-        let yaml = std::fs::read_to_string(dir.path().join("dm_full.yaml")).unwrap();
+        let yaml = std::fs::read_to_string(dir.path().join("schema/dm_full.yaml")).unwrap();
         assert!(yaml.contains("name: battery"));
         assert!(yaml.contains("name: namespace"));
         assert!(yaml.contains("name: status"));
@@ -194,7 +194,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         generate_yaml_manifest(&model, 0, dir.path()).unwrap();
 
-        let yaml = std::fs::read_to_string(dir.path().join("dm_full.yaml")).unwrap();
+        let yaml = std::fs::read_to_string(dir.path().join("schema/dm_full.yaml")).unwrap();
         assert!(yaml.contains("name: example"));
         assert!(yaml.contains("define_name: EXAMPLE_STATUS_TEMPERATURE"));
         assert!(yaml.contains("mem: uint16"));
@@ -212,7 +212,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         generate_yaml_manifest(&model, 0, dir.path()).unwrap();
 
-        let yaml = std::fs::read_to_string(dir.path().join("dm_full.yaml")).unwrap();
+        let yaml = std::fs::read_to_string(dir.path().join("schema/dm_full.yaml")).unwrap();
         // Key IDs should be non-zero encoded 32-bit values
         assert!(yaml.contains("id: "));
         // Parse the YAML back and check IDs are non-zero

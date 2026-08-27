@@ -90,8 +90,24 @@ pub fn generate(
     target: &target::TargetConfig,
     no_events: bool,
     emit_tinyfsm: bool,
+    model_path: Option<&Path>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     std::fs::create_dir_all(output_dir)?;
+    std::fs::create_dir_all(output_dir.join("api"))?;
+    std::fs::create_dir_all(output_dir.join("storage"))?;
+    std::fs::create_dir_all(output_dir.join("core"))?;
+    std::fs::create_dir_all(output_dir.join("test"))?;
+    std::fs::create_dir_all(output_dir.join("schema"))?;
+
+    // Copy the original TOML model file into schema/ for traceability
+    if let Some(mp) = model_path {
+        let dest = output_dir.join("schema").join(
+            mp.file_name()
+                .ok_or("invalid model path")?
+        );
+        std::fs::copy(mp, &dest)?;
+        log::info!("Copied model file to schema/");
+    }
 
     let tera = Tera::new(
         template_dir
@@ -111,8 +127,8 @@ pub fn generate(
         ctx.insert("version", version);
         ctx.insert("keys", &key_defs);
         let rendered = tera.render("key_definitions.h", &ctx)?;
-        write_generated(output_dir.join("key_definitions.h"), rendered)?;
-        log::info!("Generated key_definitions.h ({} keys)", key_defs.len());
+        write_generated(output_dir.join("api/key_definitions.h"), rendered)?;
+        log::info!("Generated api/key_definitions.h ({} keys)", key_defs.len());
     }
 
     // Generate C++/tinyfsm event artifacts (opt-in, additive — see --emit-tinyfsm).
@@ -127,9 +143,9 @@ pub fn generate(
         ctx.insert("version", version);
         let h = tera.render("jenkins_hash.h", &ctx)?;
         let c = tera.render("jenkins_hash.c", &ctx)?;
-        write_generated(output_dir.join("jenkins_hash.h"), h)?;
-        write_generated(output_dir.join("jenkins_hash.c"), c)?;
-        log::info!("Generated jenkins_hash.h/.c");
+        write_generated(output_dir.join("core/jenkins_hash.h"), h)?;
+        write_generated(output_dir.join("core/jenkins_hash.c"), c)?;
+        log::info!("Generated core/jenkins_hash.h/.c");
     }
 
     // Generate dm_key.h
@@ -137,8 +153,8 @@ pub fn generate(
         let mut ctx = Context::new();
         ctx.insert("version", version);
         let h = tera.render("dm_key.h", &ctx)?;
-        write_generated(output_dir.join("dm_key.h"), h)?;
-        log::info!("Generated dm_key.h");
+        write_generated(output_dir.join("api/dm_key.h"), h)?;
+        log::info!("Generated api/dm_key.h");
     }
 
     // Generate dm_namespace_definitions.h
@@ -148,8 +164,8 @@ pub fn generate(
         ctx.insert("version", version);
         ctx.insert("namespaces", &namespaces);
         let h = tera.render("dm_namespace_definitions.h", &ctx)?;
-        write_generated(output_dir.join("dm_namespace_definitions.h"), h)?;
-        log::info!("Generated dm_namespace_definitions.h");
+        write_generated(output_dir.join("api/dm_namespace_definitions.h"), h)?;
+        log::info!("Generated api/dm_namespace_definitions.h");
     }
 
     // Generate dm_enums.h (only when the model defines named enums)
@@ -159,8 +175,8 @@ pub fn generate(
         ctx.insert("version", version);
         ctx.insert("enums", &enum_defs);
         let h = tera.render("dm_enums.h", &ctx)?;
-        write_generated(output_dir.join("dm_enums.h"), h)?;
-        log::info!("Generated dm_enums.h ({} enum(s))", enum_defs.len());
+        write_generated(output_dir.join("api/dm_enums.h"), h)?;
+        log::info!("Generated api/dm_enums.h ({} enum(s))", enum_defs.len());
     }
 
     // Generate dm_full.yaml manifest
@@ -179,10 +195,10 @@ pub fn generate(
         ctx.insert("bool", bs);
         let h = tera.render("boolean_storage.h", &ctx)?;
         let c = tera.render("boolean_storage.c", &ctx)?;
-        write_generated(output_dir.join("boolean_storage.h"), h)?;
-        write_generated(output_dir.join("boolean_storage.c"), c)?;
+        write_generated(output_dir.join("storage/boolean_storage.h"), h)?;
+        write_generated(output_dir.join("storage/boolean_storage.c"), c)?;
         log::info!(
-            "Generated boolean_storage.h/.c ({} keys, {} word(s))",
+            "Generated storage/boolean_storage.h/.c ({} keys, {} word(s))",
             bs.num_keys,
             bs.num_words
         );
@@ -195,10 +211,10 @@ pub fn generate(
         ctx.insert("types", &int_storages);
         let h = tera.render("integer_storage.h", &ctx)?;
         let c = tera.render("integer_storage.c", &ctx)?;
-        write_generated(output_dir.join("integer_storage.h"), h)?;
-        write_generated(output_dir.join("integer_storage.c"), c)?;
+        write_generated(output_dir.join("storage/integer_storage.h"), h)?;
+        write_generated(output_dir.join("storage/integer_storage.c"), c)?;
         log::info!(
-            "Generated integer_storage.h/.c ({} type groups)",
+            "Generated storage/integer_storage.h/.c ({} type groups)",
             int_storages.len()
         );
     }
@@ -212,10 +228,10 @@ pub fn generate(
         ctx.insert("rw", &ss.rw);
         let h = tera.render("string_storage.h", &ctx)?;
         let c = tera.render("string_storage.c", &ctx)?;
-        write_generated(output_dir.join("string_storage.h"), h)?;
-        write_generated(output_dir.join("string_storage.c"), c)?;
+        write_generated(output_dir.join("storage/string_storage.h"), h)?;
+        write_generated(output_dir.join("storage/string_storage.c"), c)?;
         log::info!(
-            "Generated string_storage.h/.c ({} total, {} RO, {} RW)",
+            "Generated storage/string_storage.h/.c ({} total, {} RO, {} RW)",
             ss.total_keys,
             ss.ro.as_ref().map_or(0, |g| g.num_keys),
             ss.rw.as_ref().map_or(0, |g| g.num_keys),
@@ -229,9 +245,9 @@ pub fn generate(
         ctx.insert("persistence", ps);
         let h = tera.render("persistence_storage.h", &ctx)?;
         let c = tera.render("persistence_storage.c", &ctx)?;
-        write_generated(output_dir.join("persistence_storage.h"), h)?;
-        write_generated(output_dir.join("persistence_storage.c"), c)?;
-        log::info!("Generated persistence_storage.h/.c ({} keys)", ps.num_keys);
+        write_generated(output_dir.join("storage/persistence_storage.h"), h)?;
+        write_generated(output_dir.join("storage/persistence_storage.c"), c)?;
+        log::info!("Generated storage/persistence_storage.h/.c ({} keys)", ps.num_keys);
     }
 
     // --- Generate dm.h / dm.c (main API layer) ---
@@ -261,10 +277,10 @@ pub fn generate(
 
         let h = tera.render("dm.h", &ctx)?;
         let c = tera.render("dm.c", &ctx)?;
-        write_generated(output_dir.join("dm.h"), h)?;
-        write_generated(output_dir.join("dm.c"), c)?;
+        write_generated(output_dir.join("api/dm.h"), h)?;
+        write_generated(output_dir.join("api/dm.c"), c)?;
         log::info!(
-            "Generated dm.h/.c (bool={}, int_types={}, ro_str={}, rw_str={})",
+            "Generated api/dm.h/.c (bool={}, int_types={}, ro_str={}, rw_str={})",
             has_bool,
             api_int_types.len(),
             has_ro_strings,
@@ -284,13 +300,13 @@ pub fn generate(
             ctx.insert("has_string_helpers", &has_string_helpers);
             ctx.insert("has_enum_helpers", &has_enum_helpers);
             let h = tera.render("dm_helpers.h", &ctx)?;
-            write_generated(output_dir.join("dm_helpers.h"), h)?;
+            write_generated(output_dir.join("api/dm_helpers.h"), h)?;
             if has_string_helpers {
                 let c = tera.render("dm_helpers.c", &ctx)?;
-                write_generated(output_dir.join("dm_helpers.c"), c)?;
+                write_generated(output_dir.join("api/dm_helpers.c"), c)?;
             }
             log::info!(
-                "Generated dm_helpers.h{} ({} helpers)",
+                "Generated api/dm_helpers.h{} ({} helpers)",
                 if has_string_helpers { "/.c" } else { "" },
                 helpers.len()
             );
@@ -310,11 +326,11 @@ pub fn generate(
         ctx.insert("has_persistence", &has_persistence);
         ctx.insert("persistence_entries", &persist_test_entries);
         let test_c = tera.render("test_dm.c", &ctx)?;
-        write_generated(output_dir.join("test_dm.c"), test_c)?;
+        write_generated(output_dir.join("test/test_dm.c"), test_c)?;
         let cmake = tera.render("CMakeLists.txt", &ctx)?;
         write_generated(output_dir.join("CMakeLists.txt"), cmake)?;
         log::info!(
-            "Generated test_dm.c + CMakeLists.txt ({} test keys)",
+            "Generated test/test_dm.c + CMakeLists.txt ({} test keys)",
             test_keys.len()
         );
     }
@@ -342,18 +358,18 @@ fn generate_tinyfsm_events(
     hpp_ctx.insert("version", version);
     hpp_ctx.insert("groups", &groups);
     let hpp = tera.render("dm_key_events.hpp", &hpp_ctx)?;
-    write_generated(output_dir.join("dm_key_events.hpp"), hpp)?;
+    write_generated(output_dir.join("api/dm_key_events.hpp"), hpp)?;
 
     let mut wrap_ctx = Context::new();
     wrap_ctx.insert("version", version);
     wrap_ctx.insert("events", &events);
     let wrapper_h = tera.render("dm_key_events_wrapper.hpp", &wrap_ctx)?;
     let wrapper_c = tera.render("dm_key_events_wrapper.cpp", &wrap_ctx)?;
-    write_generated(output_dir.join("dm_key_events_wrapper.hpp"), wrapper_h)?;
-    write_generated(output_dir.join("dm_key_events_wrapper.cpp"), wrapper_c)?;
+    write_generated(output_dir.join("api/dm_key_events_wrapper.hpp"), wrapper_h)?;
+    write_generated(output_dir.join("api/dm_key_events_wrapper.cpp"), wrapper_c)?;
 
     log::info!(
-        "Generated dm_key_events.hpp + dm_key_events_wrapper.hpp/.cpp ({} event keys)",
+        "Generated api/dm_key_events.hpp + api/dm_key_events_wrapper.hpp/.cpp ({} event keys)",
         events.len()
     );
     Ok(())

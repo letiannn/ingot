@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "string_storage.h"
-#include "jenkins_hash.h"
+#include "core/jenkins_hash.h"
 {% if ro %}
 
 /* ---- Read-only string storage ({{ ro.num_keys }} keys) ---- */

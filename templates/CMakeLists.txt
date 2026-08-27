@@ -21,19 +21,19 @@ target_include_directories(unity PUBLIC ${UNITY_DIR})
 
 # Generated data model sources
 add_library(dm STATIC
-    jenkins_hash.c
-    boolean_storage.c
-    integer_storage.c
-    string_storage.c
+    core/jenkins_hash.c
+    storage/boolean_storage.c
+    storage/integer_storage.c
+    storage/string_storage.c
 {% if has_persistence %}
-    persistence_storage.c
+    storage/persistence_storage.c
 {% endif %}
-    dm.c
+    api/dm.c
 )
 target_include_directories(dm PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Test executable
-add_executable(test_dm test_dm.c)
+add_executable(test_dm test/test_dm.c)
 target_link_libraries(test_dm dm unity)
 
 enable_testing()

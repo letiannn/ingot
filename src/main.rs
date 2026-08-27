@@ -290,6 +290,7 @@ fn run(cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
         &target_config,
         cli.no_events,
         cli.emit_tinyfsm,
+        cli.model.first().map(|p| p.as_path()),
     )?;
     log::info!("Code generation complete → {}", cli.output.display());
 

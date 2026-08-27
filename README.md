@@ -43,6 +43,9 @@ cargo build --release
 
 ```sh
 ingot --model path/to/model.toml --output generated/ --target stm32
+
+target/debug/ingot --model examples/battery.toml --output generated/ --target esp-riscv --no-events
+
 ```
 
 Options:
@@ -63,26 +66,28 @@ For a model with all feature types enabled, ingot generates:
 
 | File | Purpose |
 |------|---------|
-| `dm.h` / `dm.c` | Main API: type-dispatch get/set, init/teardown |
-| `dm_key.h` | Key bitfield union, type enum, query macros |
-| `key_definitions.h` | `#define` per key with encoded 32-bit value |
-| `dm_namespace_definitions.h` | Namespace ID constant |
-| `boolean_storage.h/.c` | Bitfield-packed boolean storage |
-| `integer_storage.h/.c` | Per-type integer storage (one hash per type) |
-| `string_storage.h/.c` | Read-only and read-write string storage |
-| `persistence_storage.h/.c` | Binary save/load for persistent keys |
-| `jenkins_hash.h/.c` | Jenkins lookup3 hash function |
-| `dm_helpers.h/.c` | Named getter/setter convenience functions |
-| `dm_full.yaml` | Resolved model manifest for downstream tools |
-| `test_dm.c` | Unity test suite |
+| `api/dm.h` / `api/dm.c` | Main API: type-dispatch get/set, init/teardown |
+| `api/dm_key.h` | Key bitfield union, type enum, query macros |
+| `api/key_definitions.h` | `#define` per key with encoded 32-bit value |
+| `api/dm_namespace_definitions.h` | Namespace ID constant |
+| `api/dm_helpers.h/.c` | Named getter/setter convenience functions |
+| `api/dm_enums.h` | User-defined enum types |
+| `storage/boolean_storage.h/.c` | Bitfield-packed boolean storage |
+| `storage/integer_storage.h/.c` | Per-type integer storage (one hash per type) |
+| `storage/string_storage.h/.c` | Read-only and read-write string storage |
+| `storage/persistence_storage.h/.c` | Binary save/load for persistent keys |
+| `core/jenkins_hash.h/.c` | Jenkins lookup3 hash function |
+| `schema/dm_full.yaml` | Resolved model manifest for downstream tools |
+| `schema/<model>.toml` | Copy of the original TOML model |
+| `test/test_dm.c` | Unity test suite |
 | `CMakeLists.txt` | Build config for tests |
 
 With `--emit-tinyfsm`, ingot additionally emits (for `event = true` keys):
 
 | File | Purpose |
 |------|---------|
-| `dm_key_events.hpp` | One empty `tinyfsm::Event` struct per event key |
-| `dm_key_events_wrapper.hpp/.cpp` | `send_tinyfsm_event_by_key(key_id)` dispatch switch (calls a consumer-provided `send_tinyfsm_event` seam) |
+| `api/dm_key_events.hpp` | One empty `tinyfsm::Event` struct per event key |
+| `api/dm_key_events_wrapper.hpp/.cpp` | `send_tinyfsm_event_by_key(key_id)` dispatch switch (calls a consumer-provided `send_tinyfsm_event` seam) |
 
 ## Data Model Format
 

@@ -3,16 +3,16 @@
 #include "dm.h"
 #include "key_definitions.h"
 {% if has_bool %}
-#include "boolean_storage.h"
+#include "storage/boolean_storage.h"
 {% endif %}
 {% if has_integers %}
-#include "integer_storage.h"
+#include "storage/integer_storage.h"
 {% endif %}
 {% if has_ro_strings or has_rw_strings %}
-#include "string_storage.h"
+#include "storage/string_storage.h"
 {% endif %}
 {% if has_persistence %}
-#include "persistence_storage.h"
+#include "storage/persistence_storage.h"
 {% endif %}
 {% if target.has_mutex %}
 {{ target.mutex_include }}

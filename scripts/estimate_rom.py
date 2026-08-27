@@ -28,9 +28,10 @@ ROM_SECTIONS = {".text", ".rodata", ".data"}
 
 def find_c_files(directory):
     files = []
-    for name in sorted(os.listdir(directory)):
-        if name.endswith(".c") and name not in SKIP_FILES:
-            files.append(os.path.join(directory, name))
+    for root, _, filenames in os.walk(directory):
+        for name in sorted(filenames):
+            if name.endswith(".c") and name not in SKIP_FILES:
+                files.append(os.path.join(root, name))
     return files
 
 
