@@ -6,6 +6,7 @@ pub mod yaml_manifest;
 
 use crate::model::key::KeyEncoding;
 use crate::model::schema::{DataModel, DataType};
+use chrono::Local;
 use serde::Serialize;
 use std::error::Error;
 use std::path::Path;
@@ -16,12 +17,20 @@ pub(crate) fn write_generated(path: impl AsRef<Path>, content: String) -> std::i
     std::fs::write(path, normalized)
 }
 
+pub(crate) fn base_ctx() -> Context {
+    let mut ctx = Context::new();
+    ctx.insert("version", env!("CARGO_PKG_VERSION"));
+    ctx.insert("time", &Local::now().format("%Y-%m-%d").to_string());
+    ctx
+}
+
 /// A key definition ready for template rendering.
 #[derive(Debug, Serialize)]
 pub struct KeyDefRenderable {
     pub namespace: String,
     pub class: String,
     pub name: String,
+    pub doc: Option<String>,
     pub define_name: String,
     pub hex_value: String,
     pub type_name: String,
@@ -133,15 +142,12 @@ pub fn generate(
             .ok_or("invalid template path")?,
     )?;
 
-    let version = env!("CARGO_PKG_VERSION");
-
     // Collect all key definitions
     let key_defs = collect_key_definitions(model, ns_id);
 
     // Generate dm_key_tbl.h
     {
-        let mut ctx = Context::new();
-        ctx.insert("version", version);
+        let mut ctx = base_ctx();
         ctx.insert("keys", &key_defs);
         let rendered = tera.render("dm_key_tbl.h", &ctx)?;
         write_generated(output_dir.join("api/dm_key_tbl.h"), rendered)?;
@@ -151,13 +157,12 @@ pub fn generate(
     // Generate C++/tinyfsm event artifacts (opt-in, additive — see --emit-tinyfsm).
     // Off by default so C99-only consumers and their output are untouched.
     if emit_tinyfsm {
-        generate_tinyfsm_events(&tera, version, &key_defs, output_dir)?;
+        generate_tinyfsm_events(&tera, &key_defs, output_dir)?;
     }
 
     // Generate jenkins_hash.h and jenkins_hash.c
     {
-        let mut ctx = Context::new();
-        ctx.insert("version", version);
+        let ctx = base_ctx();
         let h = tera.render("jenkins_hash.h", &ctx)?;
         let c = tera.render("jenkins_hash.c", &ctx)?;
         write_generated(output_dir.join("core/jenkins_hash.h"), h)?;
@@ -167,8 +172,7 @@ pub fn generate(
 
     // Generate dm_key.h
     {
-        let mut ctx = Context::new();
-        ctx.insert("version", version);
+        let ctx = base_ctx();
         let h = tera.render("dm_key.h", &ctx)?;
         write_generated(output_dir.join("api/dm_key.h"), h)?;
         log::info!("Generated api/dm_key.h");
@@ -177,8 +181,7 @@ pub fn generate(
     // Generate dm_ns.h
     {
         let namespaces = collect_namespaces(model, ns_id);
-        let mut ctx = Context::new();
-        ctx.insert("version", version);
+        let mut ctx = base_ctx();
         ctx.insert("namespaces", &namespaces);
         let h = tera.render("dm_ns.h", &ctx)?;
         write_generated(output_dir.join("api/dm_ns.h"), h)?;
@@ -188,8 +191,7 @@ pub fn generate(
     // Generate dm_enums.h (only when the model defines named enums)
     let enum_defs = enums::collect_enums(model);
     if !enum_defs.is_empty() {
-        let mut ctx = Context::new();
-        ctx.insert("version", version);
+        let mut ctx = base_ctx();
         ctx.insert("enums", &enum_defs);
         let h = tera.render("dm_enums.h", &ctx)?;
         write_generated(output_dir.join("api/dm_enums.h"), h)?;
@@ -207,8 +209,7 @@ pub fn generate(
 
     // Generate boolean_storage.h/.c
     if let Some(ref bs) = bool_storage {
-        let mut ctx = Context::new();
-        ctx.insert("version", version);
+        let mut ctx = base_ctx();
         ctx.insert("bool", bs);
         let h = tera.render("boolean_storage.h", &ctx)?;
         let c = tera.render("boolean_storage.c", &ctx)?;
@@ -223,8 +224,7 @@ pub fn generate(
 
     // Generate integer_storage.h/.c
     if !int_storages.is_empty() {
-        let mut ctx = Context::new();
-        ctx.insert("version", version);
+        let mut ctx = base_ctx();
         ctx.insert("types", &int_storages);
         let h = tera.render("integer_storage.h", &ctx)?;
         let c = tera.render("integer_storage.c", &ctx)?;
@@ -238,8 +238,7 @@ pub fn generate(
 
     // Generate string_storage.h/.c
     if let Some(ref ss) = str_storage {
-        let mut ctx = Context::new();
-        ctx.insert("version", version);
+        let mut ctx = base_ctx();
         ctx.insert("total_keys", &ss.total_keys);
         ctx.insert("ro", &ss.ro);
         ctx.insert("rw", &ss.rw);
@@ -257,8 +256,7 @@ pub fn generate(
 
     // Generate persistence_storage.h/.c
     if let Some(ref ps) = persist_storage {
-        let mut ctx = Context::new();
-        ctx.insert("version", version);
+        let mut ctx = base_ctx();
         ctx.insert("persistence", ps);
         let h = tera.render("persistence_storage.h", &ctx)?;
         let c = tera.render("persistence_storage.c", &ctx)?;
@@ -281,8 +279,7 @@ pub fn generate(
             .map(|s| int_type_info(&s.suffix))
             .collect();
 
-        let mut ctx = Context::new();
-        ctx.insert("version", version);
+        let mut ctx = base_ctx();
         ctx.insert("has_bool", &has_bool);
         ctx.insert("has_integers", &has_integers);
         ctx.insert("has_ro_strings", &has_ro_strings);
@@ -331,8 +328,7 @@ pub fn generate(
         if !helpers.is_empty() {
             let has_string_helpers = helpers.iter().any(|h| h.is_string);
             let has_enum_helpers = helpers.iter().any(|h| h.is_enum);
-            let mut ctx = Context::new();
-            ctx.insert("version", version);
+            let mut ctx = base_ctx();
             ctx.insert("helpers", &helpers);
             ctx.insert("has_string_helpers", &has_string_helpers);
             ctx.insert("has_enum_helpers", &has_enum_helpers);
@@ -355,8 +351,7 @@ pub fn generate(
         let test_keys = collect_test_keys(model, ns_id);
         let has_persistence = persist_storage.is_some();
         let persist_test_entries = collect_persistence_test_entries(model, ns_id);
-        let mut ctx = Context::new();
-        ctx.insert("version", version);
+        let mut ctx = base_ctx();
         ctx.insert("keys", &test_keys);
         ctx.insert("namespace", &model.meta.id);
         ctx.insert("no_events", &no_events);
@@ -381,7 +376,6 @@ pub fn generate(
 /// event keys gets no C++ artifacts even with the flag on.
 fn generate_tinyfsm_events(
     tera: &Tera,
-    version: &str,
     key_defs: &[KeyDefRenderable],
     output_dir: &Path,
 ) -> Result<(), Box<dyn std::error::Error>> {
@@ -391,14 +385,12 @@ fn generate_tinyfsm_events(
         return Ok(());
     }
 
-    let mut hpp_ctx = Context::new();
-    hpp_ctx.insert("version", version);
+    let mut hpp_ctx = base_ctx();
     hpp_ctx.insert("groups", &groups);
     let hpp = tera.render("dm_key_events.hpp", &hpp_ctx)?;
     write_generated(output_dir.join("api/dm_key_events.hpp"), hpp)?;
 
-    let mut wrap_ctx = Context::new();
-    wrap_ctx.insert("version", version);
+    let mut wrap_ctx = base_ctx();
     wrap_ctx.insert("events", &events);
     let wrapper_h = tera.render("dm_key_events_wrapper.hpp", &wrap_ctx)?;
     let wrapper_c = tera.render("dm_key_events_wrapper.cpp", &wrap_ctx)?;
@@ -527,6 +519,7 @@ fn collect_key_definitions(model: &DataModel, ns_id: u16) -> Vec<KeyDefRenderabl
                 namespace: resolve_ns_name(class, model),
                 class: class.id.clone(),
                 name: key.id.clone(),
+                doc: key.doc.clone(),
                 define_name: format!("DM_KEY_{c_ns_name}_{class_name}_{key_name}"),
                 hex_value: format!("{encoded:#010X}"),
                 type_name: format!("{:?}", key.data_type).to_lowercase(),

@@ -4,7 +4,7 @@ pub mod storage;
 use crate::model::schema::DataModel;
 use serde::Serialize;
 use std::path::Path;
-use tera::{Context, Tera};
+use tera::Tera;
 
 use super::write_generated;
 
@@ -32,8 +32,6 @@ pub fn generate(
             .to_str()
             .ok_or("invalid template path")?,
     )?;
-
-    let version = env!("CARGO_PKG_VERSION");
 
     let rust_enums = enums::collect_rust_enums(model);
     let (int_groups, int_accessors) = storage::collect_int_groups(model, ns_id)?;
@@ -75,8 +73,7 @@ pub fn generate(
     let has_bool = bool_group.is_some();
     let has_bytes = !bytes_accessors.is_empty();
 
-    let mut ctx = Context::new();
-    ctx.insert("version", version);
+    let mut ctx = super::base_ctx();
     ctx.insert("enums", &rust_enums);
     ctx.insert("key_consts", &key_consts);
     ctx.insert("int_groups", &int_groups);
