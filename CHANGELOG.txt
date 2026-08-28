@@ -114,7 +114,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Boolean bitfield storage C codegen: packed uint32_t words, SetBit/ClearBit/TestBit
 - String storage C codegen: separate RO (const literals) and RW (fixed-size char arrays)
 - Main data model API codegen: dm_key.h, dm.h, dm.c with type-dispatch get/set
-- Namespace definitions codegen: dm_namespace_definitions.h
+- Namespace definitions codegen: dm_ns.h
 - Helper getter/setter codegen: dm_helpers.h/.c with static inline integral + string helpers
 - Unity integration test generation: test_dm.c + CMakeLists.txt per model
 - Target abstraction: --target flag wired to codegen, per-platform mutex in dm.c
@@ -127,7 +127,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Generated Unity tests: file-not-found + save/load roundtrip
 
 - dm_full.yaml manifest generation: YAML dump of resolved data model for downstream tools
-- Tera template infrastructure (14 templates: dm, dm_key, dm_namespace_definitions, dm_helpers, integer_storage, boolean_storage, string_storage, jenkins_hash, key_definitions)
+- Tera template infrastructure (14 templates: dm, dm_key, dm_ns, dm_helpers, integer_storage, boolean_storage, string_storage, jenkins_hash, dm_key_tbl)
 - Example data models: minimal.toml (5 keys), battery.toml (18 keys, port of UDM)
 - 32-bit key encoding/decoding with bitfield layout
 - Target abstraction for STM32, ESP32 (Xtensa/RISC-V), 8-bit MCU, Linux64

@@ -44,7 +44,7 @@ typedef union {
         unsigned int ns           : 10;
     } part;
     uint32_t val;
-} DataModel_Key;
+} DM_Key;
 
 #define DM_IS_KEY_READONLY(k)          ((k) & 0x1U)
 #define DM_IS_KEY_DERIVED(k)           (((k) >> 1) & 0x1U)

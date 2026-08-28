@@ -40,38 +40,46 @@ typedef union {
 } dm_val_t;
 
 {% if not no_events %}
-typedef void (*DataModel_Event_Callback)(uint32_t key);
+typedef void (*DM_Event_Callback)(uint32_t key);
 
-void DataModel_Initialize(DataModel_Event_Callback event_callback);
+void DM_Initialize(DM_Event_Callback event_callback);
 {% else %}
-void DataModel_Initialize(void);
+void DM_Initialize(void);
 {% endif %}
-void DataModel_TearDown(void);
+void DM_TearDown(void);
 
 /* Integral type dispatch (routes via key data_type bits) */
-DM_RETURN_CODE DataModel_SetIntegralTypeByKey(uint32_t key, dm_val_t inval);
-dm_val_t       DataModel_GetIntegralTypeByKey(uint32_t key);
+DM_RETURN_CODE DM_SetValComType(uint32_t key, dm_val_t inval);
+dm_val_t       DM_GetValComType(uint32_t key);
 
 /* Typed convenience setters */
 {% if has_bool %}
-DM_RETURN_CODE DataModel_SetBooleanByKey(uint32_t key, bool val);
+DM_RETURN_CODE DM_SetValBit(uint32_t key, bool val);
 {% endif %}
 {% for t in int_types %}
-DM_RETURN_CODE DataModel_Set{{ t.wrapper_suffix }}ByKey(uint32_t key, {{ t.c_type }} val);
+DM_RETURN_CODE DM_SetVal{{ t.short_suffix }}(uint32_t key, {{ t.c_type }} val);
+{% endfor %}
+
+/* Typed convenience getters */
+{% if has_bool %}
+bool DM_GetValBit(uint32_t key);
+{% endif %}
+{% for t in int_types %}
+{{ t.c_type }} DM_GetVal{{ t.short_suffix }}(uint32_t key);
 {% endfor %}
 
 /* String API */
 {% if has_ro_strings or has_rw_strings %}
-DM_RETURN_CODE DataModel_GetStringByKey(uint32_t key, const char **out_str);
+DM_RETURN_CODE DM_GetValStr(uint32_t key, const char **out_str);
 {% endif %}
 {% if has_rw_strings %}
-DM_RETURN_CODE DataModel_SetStringByKey(uint32_t key, const char *val);
+DM_RETURN_CODE DM_SetValStr(uint32_t key, const char *val);
 {% endif %}
 {% if has_persistence %}
 
 /* Persistence API */
-DM_RETURN_CODE DataModel_LoadPersistentKeys(const char *filepath);
-DM_RETURN_CODE DataModel_SavePersistentKeys(const char *filepath);
+DM_RETURN_CODE DM_LoadPersistentKeys(const char *filepath);
+DM_RETURN_CODE DM_SavePersistentKeys(const char *filepath);
 {% endif %}
 
 #ifdef __cplusplus

@@ -42,10 +42,14 @@ cargo build --release
 ## Usage
 
 ```sh
+#将path/to/model.toml文件生成C代码
 ingot --model path/to/model.toml --output generated/ --target stm32
 
+#将examples/battery.toml文件生成C代码
 target/debug/ingot --model examples/battery.toml --output generated/ --target esp-riscv --no-events
 
+#将examples目录下的所有toml文件生成C代码
+target/release/ingot --model examples/ --output generated/ --target esp-riscv --no-events
 ```
 
 Options:
@@ -68,8 +72,8 @@ For a model with all feature types enabled, ingot generates:
 |------|---------|
 | `api/dm.h` / `api/dm.c` | Main API: type-dispatch get/set, init/teardown |
 | `api/dm_key.h` | Key bitfield union, type enum, query macros |
-| `api/key_definitions.h` | `#define` per key with encoded 32-bit value |
-| `api/dm_namespace_definitions.h` | Namespace ID constant |
+| `api/dm_key_tbl.h` | `#define` per key with encoded 32-bit value |
+| `api/dm_ns.h` | Namespace ID constant |
 | `api/dm_helpers.h/.c` | Named getter/setter convenience functions |
 | `api/dm_enums.h` | User-defined enum types |
 | `storage/boolean_storage.h/.c` | Bitfield-packed boolean storage |

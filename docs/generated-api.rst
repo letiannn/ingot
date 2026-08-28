@@ -28,7 +28,7 @@ All integral types (bool, integers) use a type-dispatch API:
 .. code-block:: c
 
     #include "dm.h"
-    #include "key_definitions.h"
+    #include "dm_key_tbl.h"
 
     // Set a value
     dm_val_t val = { 0 };

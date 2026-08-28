@@ -7,6 +7,7 @@ pub mod yaml_manifest;
 use crate::model::key::KeyEncoding;
 use crate::model::schema::{DataModel, DataType};
 use serde::Serialize;
+use std::error::Error;
 use std::path::Path;
 use tera::{Context, Tera};
 
@@ -58,17 +59,18 @@ struct DmIntTypeInfo {
     get_fn: String,
     set_fn: String,
     wrapper_suffix: String,
+    short_suffix: String,
 }
 
 /// Map integer storage suffix to API dispatch info.
 fn int_type_info(suffix: &str) -> DmIntTypeInfo {
-    let (type_enum, c_type, val_field, wrapper) = match suffix {
-        "UINT8" => ("DM_KEY_TYPE_UINT8", "uint8_t", "u8val", "UInt8"),
-        "SINT8" => ("DM_KEY_TYPE_INT8", "int8_t", "s8val", "SInt8"),
-        "UINT16" => ("DM_KEY_TYPE_UINT16", "uint16_t", "u16val", "UInt16"),
-        "SINT16" => ("DM_KEY_TYPE_INT16", "int16_t", "s16val", "SInt16"),
-        "UINT32" => ("DM_KEY_TYPE_UINT32", "uint32_t", "u32val", "UInt32"),
-        "SINT32" => ("DM_KEY_TYPE_INT32", "int32_t", "s32val", "SInt32"),
+    let (type_enum, c_type, val_field, wrapper, short) = match suffix {
+        "UINT8" => ("DM_KEY_TYPE_UINT8", "uint8_t", "u8val", "UInt8", "U8"),
+        "SINT8" => ("DM_KEY_TYPE_INT8", "int8_t", "s8val", "SInt8", "S8"),
+        "UINT16" => ("DM_KEY_TYPE_UINT16", "uint16_t", "u16val", "UInt16", "U16"),
+        "SINT16" => ("DM_KEY_TYPE_INT16", "int16_t", "s16val", "SInt16", "S16"),
+        "UINT32" => ("DM_KEY_TYPE_UINT32", "uint32_t", "u32val", "UInt32", "U32"),
+        "SINT32" => ("DM_KEY_TYPE_INT32", "int32_t", "s32val", "SInt32", "S32"),
         _ => unreachable!("unknown integer suffix: {suffix}"),
     };
     DmIntTypeInfo {
@@ -78,6 +80,7 @@ fn int_type_info(suffix: &str) -> DmIntTypeInfo {
         get_fn: format!("IntegerStorage_Get{suffix}Key"),
         set_fn: format!("IntegerStorage_Set{suffix}Key"),
         wrapper_suffix: wrapper.to_string(),
+        short_suffix: short.to_string(),
     }
 }
 
@@ -99,14 +102,28 @@ pub fn generate(
     std::fs::create_dir_all(output_dir.join("test"))?;
     std::fs::create_dir_all(output_dir.join("schema"))?;
 
-    // Copy the original TOML model file into schema/ for traceability
+    // Copy the original TOML model file(s) into schema/ for traceability
     if let Some(mp) = model_path {
-        let dest = output_dir.join("schema").join(
-            mp.file_name()
-                .ok_or("invalid model path")?
-        );
-        std::fs::copy(mp, &dest)?;
-        log::info!("Copied model file to schema/");
+        if mp.is_file() {
+            let dest = output_dir.join("schema").join(
+                mp.file_name()
+                    .ok_or("invalid model path")?
+            );
+            std::fs::copy(mp, &dest)?;
+            log::info!("Copied model file to schema/");
+        } else if mp.is_dir() {
+            for entry in std::fs::read_dir(mp)? {
+                let entry = entry?;
+                let p = entry.path();
+                if p.extension().is_some_and(|ext| ext == "toml") {
+                    let dest = output_dir.join("schema").join(
+                        p.file_name().ok_or("invalid model path")?
+                    );
+                    std::fs::copy(&p, &dest)?;
+                }
+            }
+            log::info!("Copied model files from directory to schema/");
+        }
     }
 
     let tera = Tera::new(
@@ -121,14 +138,14 @@ pub fn generate(
     // Collect all key definitions
     let key_defs = collect_key_definitions(model, ns_id);
 
-    // Generate key_definitions.h
+    // Generate dm_key_tbl.h
     {
         let mut ctx = Context::new();
         ctx.insert("version", version);
         ctx.insert("keys", &key_defs);
-        let rendered = tera.render("key_definitions.h", &ctx)?;
-        write_generated(output_dir.join("api/key_definitions.h"), rendered)?;
-        log::info!("Generated api/key_definitions.h ({} keys)", key_defs.len());
+        let rendered = tera.render("dm_key_tbl.h", &ctx)?;
+        write_generated(output_dir.join("api/dm_key_tbl.h"), rendered)?;
+        log::info!("Generated api/dm_key_tbl.h ({} keys)", key_defs.len());
     }
 
     // Generate C++/tinyfsm event artifacts (opt-in, additive — see --emit-tinyfsm).
@@ -157,15 +174,15 @@ pub fn generate(
         log::info!("Generated api/dm_key.h");
     }
 
-    // Generate dm_namespace_definitions.h
+    // Generate dm_ns.h
     {
         let namespaces = collect_namespaces(model, ns_id);
         let mut ctx = Context::new();
         ctx.insert("version", version);
         ctx.insert("namespaces", &namespaces);
-        let h = tera.render("dm_namespace_definitions.h", &ctx)?;
-        write_generated(output_dir.join("api/dm_namespace_definitions.h"), h)?;
-        log::info!("Generated api/dm_namespace_definitions.h");
+        let h = tera.render("dm_ns.h", &ctx)?;
+        write_generated(output_dir.join("api/dm_ns.h"), h)?;
+        log::info!("Generated api/dm_ns.h");
     }
 
     // Generate dm_enums.h (only when the model defines named enums)
@@ -275,8 +292,28 @@ pub fn generate(
         ctx.insert("target", target);
         ctx.insert("no_events", &no_events);
 
-        let h = tera.render("dm.h", &ctx)?;
-        let c = tera.render("dm.c", &ctx)?;
+        let h = tera
+            .render("dm.h", &ctx)
+            .map_err(|e| {
+                let mut msg = format!("Failed to render dm.h: {e}");
+                let mut src = e.source();
+                while let Some(s) = src {
+                    msg.push_str(&format!("\n  caused by: {s}"));
+                    src = s.source();
+                }
+                msg
+            })?;
+        let c = tera
+            .render("dm.c", &ctx)
+            .map_err(|e| {
+                let mut msg = format!("Failed to render dm.c: {e}");
+                let mut src = e.source();
+                while let Some(s) = src {
+                    msg.push_str(&format!("\n  caused by: {s}"));
+                    src = s.source();
+                }
+                msg
+            })?;
         write_generated(output_dir.join("api/dm.h"), h)?;
         write_generated(output_dir.join("api/dm.c"), c)?;
         log::info!(

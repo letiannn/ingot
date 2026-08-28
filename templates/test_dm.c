@@ -3,7 +3,7 @@
 #include "unity.h"
 #include "api/dm.h"
 #include "api/dm_key.h"
-#include "api/key_definitions.h"
+#include "api/dm_key_tbl.h"
 {% if has_persistence %}
 #include "storage/persistence_storage.h"
 {% endif %}
@@ -14,14 +14,14 @@ static void dummy_event_callback(uint32_t key) { (void)key; }
 
 void setUp(void) {
 {% if not no_events %}
-    DataModel_Initialize(dummy_event_callback);
+    DM_Initialize(dummy_event_callback);
 {% else %}
-    DataModel_Initialize();
+    DM_Initialize();
 {% endif %}
 }
 
 void tearDown(void) {
-    DataModel_TearDown();
+    DM_TearDown();
 }
 
 /* ---- Default value tests ---- */
@@ -30,7 +30,7 @@ void tearDown(void) {
 void test_default_{{ k.define_name }}(void)
 {
     const char *val = NULL;
-    DM_RETURN_CODE rc = DataModel_GetStringByKey({{ k.define_name }}, &val);
+    DM_RETURN_CODE rc = DM_GetStr({{ k.define_name }}, &val);
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SUCCESS, rc);
     TEST_ASSERT_NOT_NULL(val);
     TEST_ASSERT_EQUAL_STRING({{ k.default_c }}, val);
@@ -38,13 +38,13 @@ void test_default_{{ k.define_name }}(void)
 {% elif k.is_bool %}
 void test_default_{{ k.define_name }}(void)
 {
-    dm_val_t val = DataModel_GetIntegralTypeByKey({{ k.define_name }});
+    dm_val_t val = DM_GetComType({{ k.define_name }});
     TEST_ASSERT_EQUAL({{ k.default_c }}, val.{{ k.val_field }});
 }
 {% else %}
 void test_default_{{ k.define_name }}(void)
 {
-    dm_val_t val = DataModel_GetIntegralTypeByKey({{ k.define_name }});
+    dm_val_t val = DM_GetComType({{ k.define_name }});
     TEST_ASSERT_EQUAL_INT({{ k.default_c }}, (int)val.{{ k.val_field }});
 }
 {% endif %}
@@ -56,10 +56,10 @@ void test_default_{{ k.define_name }}(void)
 {% if k.is_string %}
 void test_roundtrip_{{ k.define_name }}(void)
 {
-    DM_RETURN_CODE rc = DataModel_SetStringByKey({{ k.define_name }}, {{ k.test_c }});
+    DM_RETURN_CODE rc = DM_SetStr({{ k.define_name }}, {{ k.test_c }});
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SUCCESS, rc);
     const char *val = NULL;
-    rc = DataModel_GetStringByKey({{ k.define_name }}, &val);
+    rc = DM_GetStr({{ k.define_name }}, &val);
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SUCCESS, rc);
     TEST_ASSERT_EQUAL_STRING({{ k.test_c }}, val);
 }
@@ -68,9 +68,9 @@ void test_roundtrip_{{ k.define_name }}(void)
 {
     dm_val_t inval = { 0 };
     inval.{{ k.val_field }} = {{ k.test_c }};
-    DM_RETURN_CODE rc = DataModel_SetIntegralTypeByKey({{ k.define_name }}, inval);
+    DM_RETURN_CODE rc = DM_SetComType({{ k.define_name }}, inval);
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SUCCESS, rc);
-    dm_val_t out = DataModel_GetIntegralTypeByKey({{ k.define_name }});
+    dm_val_t out = DM_GetComType({{ k.define_name }});
     TEST_ASSERT_EQUAL({{ k.test_c }}, out.{{ k.val_field }});
 }
 {% else %}
@@ -78,9 +78,9 @@ void test_roundtrip_{{ k.define_name }}(void)
 {
     dm_val_t inval = { 0 };
     inval.{{ k.val_field }} = {{ k.test_c }};
-    DM_RETURN_CODE rc = DataModel_SetIntegralTypeByKey({{ k.define_name }}, inval);
+    DM_RETURN_CODE rc = DM_SetComType({{ k.define_name }}, inval);
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SUCCESS, rc);
-    dm_val_t out = DataModel_GetIntegralTypeByKey({{ k.define_name }});
+    dm_val_t out = DM_GetComType({{ k.define_name }});
     TEST_ASSERT_EQUAL_INT({{ k.test_c }}, (int)out.{{ k.val_field }});
 }
 {% endif %}
@@ -93,7 +93,7 @@ void test_roundtrip_{{ k.define_name }}(void)
 void test_readonly_{{ k.define_name }}(void)
 {
     dm_val_t inval = { 0 };
-    DM_RETURN_CODE rc = DataModel_SetIntegralTypeByKey({{ k.define_name }}, inval);
+    DM_RETURN_CODE rc = DM_SetComType({{ k.define_name }}, inval);
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SET_ON_READONLY_KEY, rc);
 }
 {% endif %}
@@ -104,8 +104,8 @@ void test_readonly_{{ k.define_name }}(void)
 {% if not k.read_only and not k.is_string %}
 void test_unchanged_{{ k.define_name }}(void)
 {
-    dm_val_t val = DataModel_GetIntegralTypeByKey({{ k.define_name }});
-    DM_RETURN_CODE rc = DataModel_SetIntegralTypeByKey({{ k.define_name }}, val);
+    dm_val_t val = DM_GetComType({{ k.define_name }});
+    DM_RETURN_CODE rc = DM_SetComType({{ k.define_name }}, val);
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SET_VALUE_UNCHANGED, rc);
 }
 {% endif %}
@@ -116,7 +116,7 @@ void test_unchanged_{{ k.define_name }}(void)
 
 void test_persistence_file_not_found(void)
 {
-    DM_RETURN_CODE rc = DataModel_LoadPersistentKeys("/tmp/ingot_nonexistent_dm.bin");
+    DM_RETURN_CODE rc = DM_LoadPersistentKeys("/tmp/ingot_nonexistent_dm.bin");
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_PERSISTENCE_FILE_NOT_FOUND, rc);
 }
 
@@ -126,35 +126,35 @@ void test_persistence_save_load_roundtrip(void)
 
 {% for e in persistence_entries %}
 {% if e.is_string %}
-    DataModel_SetStringByKey({{ e.define_name }}, {{ e.test_c }});
+    DM_SetStr({{ e.define_name }}, {{ e.test_c }});
 {% elif e.is_bool %}
     {
         dm_val_t v = { 0 };
         v.{{ e.val_field }} = {{ e.test_c }};
-        DataModel_SetIntegralTypeByKey({{ e.define_name }}, v);
+        DM_SetComType({{ e.define_name }}, v);
     }
 {% else %}
     {
         dm_val_t v = { 0 };
         v.{{ e.val_field }} = {{ e.test_c }};
-        DataModel_SetIntegralTypeByKey({{ e.define_name }}, v);
+        DM_SetComType({{ e.define_name }}, v);
     }
 {% endif %}
 {% endfor %}
 
     /* Save current state */
-    DM_RETURN_CODE rc = DataModel_SavePersistentKeys(path);
+    DM_RETURN_CODE rc = DM_SavePersistentKeys(path);
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SUCCESS, rc);
 
     /* Set values back to defaults (storage arrays are static, TearDown doesn't reset) */
 {% for e in persistence_entries %}
 {% if e.is_string %}
-    DataModel_SetStringByKey({{ e.define_name }}, {{ e.default_c }});
+    DM_SetStr({{ e.define_name }}, {{ e.default_c }});
 {% else %}
     {
         dm_val_t d = { 0 };
         d.{{ e.val_field }} = {{ e.default_c }};
-        DataModel_SetIntegralTypeByKey({{ e.define_name }}, d);
+        DM_SetComType({{ e.define_name }}, d);
     }
 {% endif %}
 {% endfor %}
@@ -164,24 +164,24 @@ void test_persistence_save_load_roundtrip(void)
 {% if e.is_string %}
     {
         const char *s = NULL;
-        DataModel_GetStringByKey({{ e.define_name }}, &s);
+        DM_GetStr({{ e.define_name }}, &s);
         TEST_ASSERT_EQUAL_STRING({{ e.default_c }}, s);
     }
 {% elif e.is_bool %}
     {
-        dm_val_t dv = DataModel_GetIntegralTypeByKey({{ e.define_name }});
+        dm_val_t dv = DM_GetComType({{ e.define_name }});
         TEST_ASSERT_EQUAL({{ e.default_c }}, dv.{{ e.val_field }});
     }
 {% else %}
     {
-        dm_val_t dv = DataModel_GetIntegralTypeByKey({{ e.define_name }});
+        dm_val_t dv = DM_GetComType({{ e.define_name }});
         TEST_ASSERT_EQUAL_INT({{ e.default_c }}, (int)dv.{{ e.val_field }});
     }
 {% endif %}
 {% endfor %}
 
     /* Load saved state */
-    rc = DataModel_LoadPersistentKeys(path);
+    rc = DM_LoadPersistentKeys(path);
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SUCCESS, rc);
 
     /* Verify restored values */
@@ -189,17 +189,17 @@ void test_persistence_save_load_roundtrip(void)
 {% if e.is_string %}
     {
         const char *s = NULL;
-        DataModel_GetStringByKey({{ e.define_name }}, &s);
+        DM_GetStr({{ e.define_name }}, &s);
         TEST_ASSERT_EQUAL_STRING({{ e.test_c }}, s);
     }
 {% elif e.is_bool %}
     {
-        dm_val_t rv = DataModel_GetIntegralTypeByKey({{ e.define_name }});
+        dm_val_t rv = DM_GetComType({{ e.define_name }});
         TEST_ASSERT_EQUAL({{ e.test_c }}, rv.{{ e.val_field }});
     }
 {% else %}
     {
-        dm_val_t rv = DataModel_GetIntegralTypeByKey({{ e.define_name }});
+        dm_val_t rv = DM_GetComType({{ e.define_name }});
         TEST_ASSERT_EQUAL_INT({{ e.test_c }}, (int)rv.{{ e.val_field }});
     }
 {% endif %}

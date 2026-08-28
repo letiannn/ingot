@@ -40,7 +40,7 @@ Enums define named integer-to-label mappings reusable across keys.
     active = 1
 
 Reference an enum on a key with ``enum = "mode"``. The enum values appear as
-comments in the generated ``key_definitions.h``.
+comments in the generated ``dm_key_tbl.h``.
 
 
 Classes

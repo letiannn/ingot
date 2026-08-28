@@ -1,7 +1,7 @@
 # C++ compile/link/run check for ingot's --emit-tinyfsm output.
 #
 # Driven by `invoke test`. Compiles the generated dm_key_events_wrapper.cpp
-# (which #includes the generated dm_key_events.hpp + key_definitions.h and
+# (which #includes the generated dm_key_events.hpp + dm_key_tbl.h and
 # the consumer-seam fsmlist.hpp) against real tinyfsm, then links and runs it.
 #
 # Required cache vars:
@@ -27,7 +27,7 @@ add_executable(tinyfsm_dispatch
 )
 target_include_directories(tinyfsm_dispatch PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}   # fsmlist.hpp — the consumer seam
-    ${GEN_DIR}                    # generated key_definitions.h, dm_key_events*.hpp
+    ${GEN_DIR}                    # generated dm_key_tbl.h, dm_key_events*.hpp
     ${TINYFSM_DIR}                # tinyfsm.hpp
 )
 

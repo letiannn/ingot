@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "dm.h"
-#include "key_definitions.h"
+#include "dm_key_tbl.h"
 {% if has_enum_helpers %}#include "dm_enums.h"
 {% endif %}
 
@@ -15,23 +15,23 @@ extern "C" {
 {% for h in helpers %}
 {% if h.is_string %}
 
-const char *DataModel_Get_{{ h.helper_name }}(void);
+const char *DM_Get_{{ h.helper_name }}(void);
 {% if not h.is_read_only %}
-DM_RETURN_CODE DataModel_Set_{{ h.helper_name }}(const char *val);
+DM_RETURN_CODE DM_Set_{{ h.helper_name }}(const char *val);
 {% endif %}
 {% else %}
 
-static inline {{ h.c_type }} DataModel_Get_{{ h.helper_name }}(void)
+static inline {{ h.c_type }} DM_Get_{{ h.helper_name }}(void)
 {
-    dm_val_t val = DataModel_GetIntegralTypeByKey({{ h.define_name }});
+    dm_val_t val = DM_GetComType({{ h.define_name }});
     return {% if h.is_enum %}({{ h.c_type }})val.{{ h.val_field }}{% else %}val.{{ h.val_field }}{% endif %};
 }
 {% if not h.is_read_only %}
-static inline DM_RETURN_CODE DataModel_Set_{{ h.helper_name }}({{ h.c_type }} x)
+static inline DM_RETURN_CODE DM_Set_{{ h.helper_name }}({{ h.c_type }} x)
 {
     dm_val_t val = { 0 };
     val.{{ h.val_field }} = {% if h.is_enum %}({{ h.storage_c_type }})x{% else %}x{% endif %};
-    return DataModel_SetIntegralTypeByKey({{ h.define_name }}, val);
+    return DM_SetComType({{ h.define_name }}, val);
 }
 {% endif %}
 {% endif %}

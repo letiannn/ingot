@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 /* Fan a runtime key_id out to its typed tinyfsm event. C-linkage so the
- * C99 DataModel_Event_Callback (or a broker draining it) can call it. */
+ * C99 DM_Event_Callback (or a broker draining it) can call it. */
 void send_tinyfsm_event_by_key(uint32_t key_id);
 
 #ifdef __cplusplus

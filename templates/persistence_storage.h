@@ -31,7 +31,7 @@ bool PersistenceStorage_IsKeyPersistent(uint32_t key);
  * @param filepath  Path to binary file, or NULL for DEFAULT_DM_FILENAME.
  * @return DM_RETURN_CODE_SUCCESS on success.
  */
-DM_RETURN_CODE DataModel_LoadPersistentKeys(const char *filepath);
+DM_RETURN_CODE DM_LoadPersistentKeys(const char *filepath);
 
 /**
  * Save current persistent key values from live storage to a binary file.
@@ -39,7 +39,7 @@ DM_RETURN_CODE DataModel_LoadPersistentKeys(const char *filepath);
  * @param filepath  Path to binary file, or NULL for DEFAULT_DM_FILENAME.
  * @return DM_RETURN_CODE_SUCCESS on success.
  */
-DM_RETURN_CODE DataModel_SavePersistentKeys(const char *filepath);
+DM_RETURN_CODE DM_SavePersistentKeys(const char *filepath);
 
 #ifdef __cplusplus
 }

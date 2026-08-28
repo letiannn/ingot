@@ -28,7 +28,7 @@ Quick Start
 .. code-block:: c
 
     #include "dm.h"
-    #include "key_definitions.h"
+    #include "dm_key_tbl.h"
 
     DataModel_Initialize(NULL);
 

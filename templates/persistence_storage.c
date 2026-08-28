@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "persistence_storage.h"
-#include "api/key_definitions.h"
+#include "api/dm_key_tbl.h"
 
 /* ---- Packed persistence struct ---- */
 
@@ -52,12 +52,12 @@ static void PersistenceStorage_SyncToStorage(void)
 {
 {% for e in persistence.entries %}
 {% if e.is_string %}
-    DataModel_SetStringByKey({{ e.define_name }}, persistence_data.{{ e.field_name }});
+    DM_SetStr({{ e.define_name }}, persistence_data.{{ e.field_name }});
 {% else %}
     {
         dm_val_t v = { 0 };
         v.{{ e.val_field }} = persistence_data.{{ e.field_name }};
-        DataModel_SetIntegralTypeByKey({{ e.define_name }}, v);
+        DM_SetComType({{ e.define_name }}, v);
     }
 {% endif %}
 {% endfor %}
@@ -71,14 +71,14 @@ static void PersistenceStorage_SyncFromStorage(void)
 {% if e.is_string %}
     {
         const char *s = NULL;
-        if (DataModel_GetStringByKey({{ e.define_name }}, &s) == DM_RETURN_CODE_SUCCESS && s != NULL) {
+        if (DM_GetStr({{ e.define_name }}, &s) == DM_RETURN_CODE_SUCCESS && s != NULL) {
             strncpy(persistence_data.{{ e.field_name }}, s, sizeof(persistence_data.{{ e.field_name }}) - 1);
             persistence_data.{{ e.field_name }}[sizeof(persistence_data.{{ e.field_name }}) - 1] = '\0';
         }
     }
 {% else %}
     {
-        dm_val_t v = DataModel_GetIntegralTypeByKey({{ e.define_name }});
+        dm_val_t v = DM_GetComType({{ e.define_name }});
         persistence_data.{{ e.field_name }} = v.{{ e.val_field }};
     }
 {% endif %}
@@ -87,7 +87,7 @@ static void PersistenceStorage_SyncFromStorage(void)
 
 /* ---- File I/O ---- */
 
-DM_RETURN_CODE DataModel_LoadPersistentKeys(const char *filepath)
+DM_RETURN_CODE DM_LoadPersistentKeys(const char *filepath)
 {
     const char *path = (filepath != NULL) ? filepath : DEFAULT_DM_FILENAME;
     FILE *f = fopen(path, "rb");
@@ -115,7 +115,7 @@ DM_RETURN_CODE DataModel_LoadPersistentKeys(const char *filepath)
     return DM_RETURN_CODE_SUCCESS;
 }
 
-DM_RETURN_CODE DataModel_SavePersistentKeys(const char *filepath)
+DM_RETURN_CODE DM_SavePersistentKeys(const char *filepath)
 {
     const char *path = (filepath != NULL) ? filepath : DEFAULT_DM_FILENAME;
 

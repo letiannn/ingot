@@ -102,7 +102,7 @@ The benchmarking should also validate the cross-product identifier use case:
 
 - Same `full.toml` model compiled for STM32, ESP32, 8051, and Linux produces
   **identical key values** (32-bit constants).  Verify byte-for-byte match of
-  `key_definitions.h` across all targets.
+  `dm_key_tbl.h` across all targets.
 - Compare wire cost: 38 keys x 4 bytes (ingot) = 152 bytes vs 38 x 16 bytes
   (UUID) = 608 bytes vs 38 x avg 15 bytes (string keys) = 570 bytes.
 - For a 200-key model with mostly booleans and uint8s on a 32 KiB device,

@@ -3,17 +3,17 @@
 {% for h in helpers %}
 {% if h.is_string %}
 
-const char *DataModel_Get_{{ h.helper_name }}(void)
+const char *DM_Get_{{ h.helper_name }}(void)
 {
     const char *val = NULL;
-    DataModel_GetStringByKey({{ h.define_name }}, &val);
+    DM_GetStr({{ h.define_name }}, &val);
     return val;
 }
 {% if not h.is_read_only %}
 
-DM_RETURN_CODE DataModel_Set_{{ h.helper_name }}(const char *val)
+DM_RETURN_CODE DM_Set_{{ h.helper_name }}(const char *val)
 {
-    return DataModel_SetStringByKey({{ h.define_name }}, val);
+    return DM_SetStr({{ h.define_name }}, val);
 }
 {% endif %}
 {% endif %}
