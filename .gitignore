@@ -8,3 +8,4 @@ coverage/
 *.exe
 THIRD_PARTY_LICENSES.txt
 *.cdx.json
+/build

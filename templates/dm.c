@@ -266,14 +266,4 @@ DM_RETURN_CODE DM_SetValStr(uint32_t key, const char *val)
 {% endif -%}
 {%- if has_persistence %}
 
-/* ---- Persistence API ---- */
-DM_RETURN_CODE DM_LoadPersistentKeys(const char *filepath)
-{
-    return PersistenceStorage_Load(filepath);
-}
-
-DM_RETURN_CODE DM_SavePersistentKeys(const char *filepath)
-{
-    return PersistenceStorage_Save(filepath);
-}
 {% endif %}

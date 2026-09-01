@@ -42,14 +42,18 @@ cargo build --release
 ## Usage
 
 ```sh
-#将path/to/model.toml文件生成C代码
+# 将path/to/model.toml文件生成C代码
 ingot --model path/to/model.toml --output generated/ --target stm32
 
-#将examples/battery.toml文件生成C代码
+# 将examples/battery.toml文件生成C代码
 target/debug/ingot --model examples/battery.toml --output generated/ --target esp-riscv --no-events
 
-#将examples目录下的所有toml文件生成C代码
+# 将examples目录下的所有toml文件生成C代码
 target/release/ingot --model examples/ --output generated/ --target esp-riscv --no-events
+
+# 生成linux平台代码并运行unity测试
+target/release/ingot --model examples/ --output generated/ --target linux64 --no-events
+cmake -S generated/ -B build/ -DUNITY_DIR=../deps/unity/src && cmake --build build/ && ./build/test_dm
 ```
 
 Options:

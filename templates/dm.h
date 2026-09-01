@@ -82,11 +82,6 @@ DM_RETURN_CODE DM_GetValStr(uint32_t key, const char **out_str);
 DM_RETURN_CODE DM_SetValStr(uint32_t key, const char *val);
 {%- endif %}
 {%- if has_persistence %}
-
-/* Persistence API */
-DM_RETURN_CODE DM_LoadPersistentKeys(const char *filepath);
-
-DM_RETURN_CODE DM_SavePersistentKeys(const char *filepath);
 {% endif %}
 
 #ifdef __cplusplus
