@@ -17,7 +17,7 @@ pub struct PersistenceEntry {
     pub max_size: usize,
     /// C literal for default value
     pub default_literal: String,
-    /// dm_val_t union field for integral types ("u32val", "bval", etc.)
+    /// DM_VAL_T union field for integral types ("u32val", "bval", etc.)
     pub val_field: String,
     /// True for boolean keys
     pub is_bool: bool,

@@ -28,7 +28,7 @@ pub fn generate(
 
     let tera = Tera::new(
         template_dir
-            .join("*")
+            .join("**/*")
             .to_str()
             .ok_or("invalid template path")?,
     )?;

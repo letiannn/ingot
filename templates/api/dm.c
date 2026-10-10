@@ -60,11 +60,11 @@ void DM_TearDown(void)
 {%- endif %}
 }
 
-DM_RETURN_CODE DM_SetValComType(uint32_t key, dm_val_t inval)
+DM_RETURN_CODE DM_SetValComType(uint32_t key, DM_VAL_T inval)
 {
     DM_RETURN_CODE retval;
     bool storage_result;
-    dm_val_t prev = { 0 };
+    DM_VAL_T prev = { 0 };
 
     if (!dm_initialized) {
         return DM_RETURN_CODE_NOT_INITIALIZED;
@@ -78,7 +78,6 @@ DM_RETURN_CODE DM_SetValComType(uint32_t key, dm_val_t inval)
         {{ target.mutex_lock }};
     }
 {% endif %}
-
     switch (DM_KEY_GET_TYPE(key)) {
 {%- if has_bool %}
     case DM_KEY_TYPE_BOOL:
@@ -92,8 +91,8 @@ DM_RETURN_CODE DM_SetValComType(uint32_t key, dm_val_t inval)
             retval = DM_RETURN_CODE_STORAGE_LOOKUP_FAILURE;
         }
         break;
-{% endif -%}
-{%- for t in int_types -%}
+{%- endif -%}
+{% for t in int_types %}
     case {{ t.type_enum }}:
         storage_result = {{ t.get_fn }}(key, &prev.{{ t.val_field }});
         if (!storage_result) { retval = DM_RETURN_CODE_STORAGE_LOOKUP_FAILURE; break; }
@@ -105,7 +104,7 @@ DM_RETURN_CODE DM_SetValComType(uint32_t key, dm_val_t inval)
             retval = DM_RETURN_CODE_STORAGE_LOOKUP_FAILURE;
         }
         break;
-{% endfor -%}
+{%- endfor -%}
     default:
         retval = DM_RETURN_CODE_KEY_TYPE_INCORRECT;
         break;
@@ -124,9 +123,9 @@ DM_RETURN_CODE DM_SetValComType(uint32_t key, dm_val_t inval)
     return retval;
 }
 
-dm_val_t DM_GetValComType(uint32_t key)
+DM_VAL_T DM_GetValComType(uint32_t key)
 {
-    dm_val_t val = { 0 };
+    DM_VAL_T val = { 0 };
 
     if (!dm_initialized) {
         return val;
@@ -142,12 +141,12 @@ dm_val_t DM_GetValComType(uint32_t key)
     case DM_KEY_TYPE_BOOL:
         BooleanStorage_GetKey(key, &val.bval);
         break;
-{% endif -%}
-{%- for t in int_types -%}
+{%- endif -%}
+{% for t in int_types %}
     case {{ t.type_enum }}:
         {{ t.get_fn }}(key, &val.{{ t.val_field }});
         break;
-{% endfor -%}
+{%- endfor -%}
     default:
         break;
     }
@@ -164,7 +163,7 @@ dm_val_t DM_GetValComType(uint32_t key)
 {%- if has_bool %}
 DM_RETURN_CODE DM_SetValBit(uint32_t key, bool val)
 {
-    dm_val_t inval = { 0 };
+    DM_VAL_T inval = { 0 };
     inval.bval = val;
     return DM_SetValComType(key, inval);
 }
@@ -172,7 +171,7 @@ DM_RETURN_CODE DM_SetValBit(uint32_t key, bool val)
 {%- for t in int_types %}
 DM_RETURN_CODE DM_SetVal{{ t.short_suffix }}(uint32_t key, {{ t.c_type }} val)
 {
-    dm_val_t inval = { 0 };
+    DM_VAL_T inval = { 0 };
     inval.{{ t.val_field }} = val;
     return DM_SetValComType(key, inval);
 }
@@ -182,14 +181,14 @@ DM_RETURN_CODE DM_SetVal{{ t.short_suffix }}(uint32_t key, {{ t.c_type }} val)
 {%- if has_bool %}
 bool DM_GetValBit(uint32_t key)
 {
-    dm_val_t val = DM_GetValComType(key);
+    DM_VAL_T val = DM_GetValComType(key);
     return val.bval;
 }
 {% endif -%}
 {%- for t in int_types %}
 {{ t.c_type }} DM_GetVal{{ t.short_suffix }}(uint32_t key)
 {
-    dm_val_t val = DM_GetValComType(key);
+    DM_VAL_T val = DM_GetValComType(key);
     return val.{{ t.val_field }};
 }
 {% endfor -%}

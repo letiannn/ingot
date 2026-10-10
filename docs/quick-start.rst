@@ -32,9 +32,9 @@ Quick Start
 
     DataModel_Initialize(NULL);
 
-    dm_val_t val;
+    DM_VAL_T val;
     val.u8val = 75;
     DataModel_SetIntegralTypeByKey(DM_KEY_MY_DEVICE_CONFIG_BRIGHTNESS, val);
 
-    dm_val_t out = DataModel_GetIntegralTypeByKey(DM_KEY_MY_DEVICE_CONFIG_BRIGHTNESS);
+    DM_VAL_T out = DataModel_GetIntegralTypeByKey(DM_KEY_MY_DEVICE_CONFIG_BRIGHTNESS);
     // out.u8val == 75

@@ -46,13 +46,13 @@ void test_default_{{ k.define_name }}(void)
 {% elif k.is_bool %}
 void test_default_{{ k.define_name }}(void)
 {
-    dm_val_t val = DM_GetValComType({{ k.define_name }});
+    DM_VAL_T val = DM_GetValComType({{ k.define_name }});
     TEST_ASSERT_EQUAL({{ k.default_c }}, val.{{ k.val_field }});
 }
 {% else %}
 void test_default_{{ k.define_name }}(void)
 {
-    dm_val_t val = DM_GetValComType({{ k.define_name }});
+    DM_VAL_T val = DM_GetValComType({{ k.define_name }});
     TEST_ASSERT_EQUAL_INT({{ k.default_c }}, (int)val.{{ k.val_field }});
 }
 {% endif %}
@@ -74,21 +74,21 @@ void test_roundtrip_{{ k.define_name }}(void)
 {% elif k.is_bool %}
 void test_roundtrip_{{ k.define_name }}(void)
 {
-    dm_val_t inval = { 0 };
+    DM_VAL_T inval = { 0 };
     inval.{{ k.val_field }} = {{ k.test_c }};
     DM_RETURN_CODE rc = DM_SetValComType({{ k.define_name }}, inval);
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SUCCESS, rc);
-    dm_val_t out = DM_GetValComType({{ k.define_name }});
+    DM_VAL_T out = DM_GetValComType({{ k.define_name }});
     TEST_ASSERT_EQUAL({{ k.test_c }}, out.{{ k.val_field }});
 }
 {% else %}
 void test_roundtrip_{{ k.define_name }}(void)
 {
-    dm_val_t inval = { 0 };
+    DM_VAL_T inval = { 0 };
     inval.{{ k.val_field }} = {{ k.test_c }};
     DM_RETURN_CODE rc = DM_SetValComType({{ k.define_name }}, inval);
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SUCCESS, rc);
-    dm_val_t out = DM_GetValComType({{ k.define_name }});
+    DM_VAL_T out = DM_GetValComType({{ k.define_name }});
     TEST_ASSERT_EQUAL_INT({{ k.test_c }}, (int)out.{{ k.val_field }});
 }
 {% endif %}
@@ -100,7 +100,7 @@ void test_roundtrip_{{ k.define_name }}(void)
 {% if k.read_only and not k.is_string %}
 void test_readonly_{{ k.define_name }}(void)
 {
-    dm_val_t inval = { 0 };
+    DM_VAL_T inval = { 0 };
     DM_RETURN_CODE rc = DM_SetValComType({{ k.define_name }}, inval);
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SET_ON_READONLY_KEY, rc);
 }
@@ -112,7 +112,7 @@ void test_readonly_{{ k.define_name }}(void)
 {% if not k.read_only and not k.is_string %}
 void test_unchanged_{{ k.define_name }}(void)
 {
-    dm_val_t val = DM_GetValComType({{ k.define_name }});
+    DM_VAL_T val = DM_GetValComType({{ k.define_name }});
     DM_RETURN_CODE rc = DM_SetValComType({{ k.define_name }}, val);
     TEST_ASSERT_EQUAL(DM_RETURN_CODE_SET_VALUE_UNCHANGED, rc);
 }
@@ -137,13 +137,13 @@ void test_persistence_save_load_roundtrip(void)
     DM_SetValStr({{ e.define_name }}, {{ e.test_c }});
 {% elif e.is_bool %}
     {
-        dm_val_t v = { 0 };
+        DM_VAL_T v = { 0 };
         v.{{ e.val_field }} = {{ e.test_c }};
         DM_SetValComType({{ e.define_name }}, v);
     }
 {% else %}
     {
-        dm_val_t v = { 0 };
+        DM_VAL_T v = { 0 };
         v.{{ e.val_field }} = {{ e.test_c }};
         DM_SetValComType({{ e.define_name }}, v);
     }
@@ -160,7 +160,7 @@ void test_persistence_save_load_roundtrip(void)
     DM_SetValStr({{ e.define_name }}, {{ e.default_c }});
 {% else %}
     {
-        dm_val_t d = { 0 };
+        DM_VAL_T d = { 0 };
         d.{{ e.val_field }} = {{ e.default_c }};
         DM_SetValComType({{ e.define_name }}, d);
     }
@@ -177,12 +177,12 @@ void test_persistence_save_load_roundtrip(void)
     }
 {% elif e.is_bool %}
     {
-        dm_val_t dv = DM_GetValComType({{ e.define_name }});
+        DM_VAL_T dv = DM_GetValComType({{ e.define_name }});
         TEST_ASSERT_EQUAL({{ e.default_c }}, dv.{{ e.val_field }});
     }
 {% else %}
     {
-        dm_val_t dv = DM_GetValComType({{ e.define_name }});
+        DM_VAL_T dv = DM_GetValComType({{ e.define_name }});
         TEST_ASSERT_EQUAL_INT({{ e.default_c }}, (int)dv.{{ e.val_field }});
     }
 {% endif %}
@@ -202,12 +202,12 @@ void test_persistence_save_load_roundtrip(void)
     }
 {% elif e.is_bool %}
     {
-        dm_val_t rv = DM_GetValComType({{ e.define_name }});
+        DM_VAL_T rv = DM_GetValComType({{ e.define_name }});
         TEST_ASSERT_EQUAL({{ e.test_c }}, rv.{{ e.val_field }});
     }
 {% else %}
     {
-        dm_val_t rv = DM_GetValComType({{ e.define_name }});
+        DM_VAL_T rv = DM_GetValComType({{ e.define_name }});
         TEST_ASSERT_EQUAL_INT({{ e.test_c }}, (int)rv.{{ e.val_field }});
     }
 {% endif %}

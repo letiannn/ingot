@@ -45,7 +45,7 @@ typedef union {
     int16_t  s16val;
     uint32_t u32val;
     int32_t  s32val;
-} dm_val_t;
+} DM_VAL_T;
 {% if not no_events %}
 typedef void (*DM_Event_Callback)(uint32_t key);
 
@@ -56,9 +56,9 @@ void DM_Initialize(void);
 void DM_TearDown(void);
 
 /* Integral type dispatch (routes via key data_type bits) */
-DM_RETURN_CODE DM_SetValComType(uint32_t key, dm_val_t inval);
+DM_RETURN_CODE DM_SetValComType(uint32_t key, DM_VAL_T inval);
 
-dm_val_t       DM_GetValComType(uint32_t key);
+DM_VAL_T       DM_GetValComType(uint32_t key);
 
 /* Typed convenience setters */
 {% if has_bool -%}

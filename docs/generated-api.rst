@@ -31,12 +31,12 @@ All integral types (bool, integers) use a type-dispatch API:
     #include "dm_key_tbl.h"
 
     // Set a value
-    dm_val_t val = { 0 };
+    DM_VAL_T val = { 0 };
     val.u16val = 42;
     DM_RETURN_CODE rc = DataModel_SetIntegralTypeByKey(DM_KEY_..., val);
 
     // Get a value
-    dm_val_t out = DataModel_GetIntegralTypeByKey(DM_KEY_...);
+    DM_VAL_T out = DataModel_GetIntegralTypeByKey(DM_KEY_...);
     uint16_t temp = out.u16val;
 
 Typed convenience setters are also generated:

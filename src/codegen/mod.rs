@@ -137,7 +137,7 @@ pub fn generate(
 
     let tera = Tera::new(
         template_dir
-            .join("*")
+            .join("**/*")
             .to_str()
             .ok_or("invalid template path")?,
     )?;
@@ -149,7 +149,7 @@ pub fn generate(
     {
         let mut ctx = base_ctx();
         ctx.insert("keys", &key_defs);
-        let rendered = tera.render("dm_key_tbl.h", &ctx)?;
+        let rendered = tera.render("api/dm_key_tbl.h", &ctx)?;
         write_generated(output_dir.join("api/dm_key_tbl.h"), rendered)?;
         log::info!("Generated api/dm_key_tbl.h ({} keys)", key_defs.len());
     }
@@ -163,8 +163,8 @@ pub fn generate(
     // Generate jenkins_hash.h and jenkins_hash.c
     {
         let ctx = base_ctx();
-        let h = tera.render("jenkins_hash.h", &ctx)?;
-        let c = tera.render("jenkins_hash.c", &ctx)?;
+        let h = tera.render("core/jenkins_hash.h", &ctx)?;
+        let c = tera.render("core/jenkins_hash.c", &ctx)?;
         write_generated(output_dir.join("core/jenkins_hash.h"), h)?;
         write_generated(output_dir.join("core/jenkins_hash.c"), c)?;
         log::info!("Generated core/jenkins_hash.h/.c");
@@ -173,7 +173,7 @@ pub fn generate(
     // Generate dm_key.h
     {
         let ctx = base_ctx();
-        let h = tera.render("dm_key.h", &ctx)?;
+        let h = tera.render("api/dm_key.h", &ctx)?;
         write_generated(output_dir.join("api/dm_key.h"), h)?;
         log::info!("Generated api/dm_key.h");
     }
@@ -183,7 +183,7 @@ pub fn generate(
         let namespaces = collect_namespaces(model, ns_id);
         let mut ctx = base_ctx();
         ctx.insert("namespaces", &namespaces);
-        let h = tera.render("dm_ns.h", &ctx)?;
+        let h = tera.render("api/dm_ns.h", &ctx)?;
         write_generated(output_dir.join("api/dm_ns.h"), h)?;
         log::info!("Generated api/dm_ns.h");
     }
@@ -193,7 +193,7 @@ pub fn generate(
     if !enum_defs.is_empty() {
         let mut ctx = base_ctx();
         ctx.insert("enums", &enum_defs);
-        let h = tera.render("dm_enums.h", &ctx)?;
+        let h = tera.render("api/dm_enums.h", &ctx)?;
         write_generated(output_dir.join("api/dm_enums.h"), h)?;
         log::info!("Generated api/dm_enums.h ({} enum(s))", enum_defs.len());
     }
@@ -211,8 +211,8 @@ pub fn generate(
     if let Some(ref bs) = bool_storage {
         let mut ctx = base_ctx();
         ctx.insert("bool", bs);
-        let h = tera.render("boolean_storage.h", &ctx)?;
-        let c = tera.render("boolean_storage.c", &ctx)?;
+        let h = tera.render("storage/boolean_storage.h", &ctx)?;
+        let c = tera.render("storage/boolean_storage.c", &ctx)?;
         write_generated(output_dir.join("storage/boolean_storage.h"), h)?;
         write_generated(output_dir.join("storage/boolean_storage.c"), c)?;
         log::info!(
@@ -226,8 +226,8 @@ pub fn generate(
     if !int_storages.is_empty() {
         let mut ctx = base_ctx();
         ctx.insert("types", &int_storages);
-        let h = tera.render("integer_storage.h", &ctx)?;
-        let c = tera.render("integer_storage.c", &ctx)?;
+        let h = tera.render("storage/integer_storage.h", &ctx)?;
+        let c = tera.render("storage/integer_storage.c", &ctx)?;
         write_generated(output_dir.join("storage/integer_storage.h"), h)?;
         write_generated(output_dir.join("storage/integer_storage.c"), c)?;
         log::info!(
@@ -242,8 +242,8 @@ pub fn generate(
         ctx.insert("total_keys", &ss.total_keys);
         ctx.insert("ro", &ss.ro);
         ctx.insert("rw", &ss.rw);
-        let h = tera.render("string_storage.h", &ctx)?;
-        let c = tera.render("string_storage.c", &ctx)?;
+        let h = tera.render("storage/string_storage.h", &ctx)?;
+        let c = tera.render("storage/string_storage.c", &ctx)?;
         write_generated(output_dir.join("storage/string_storage.h"), h)?;
         write_generated(output_dir.join("storage/string_storage.c"), c)?;
         log::info!(
@@ -258,8 +258,8 @@ pub fn generate(
     if let Some(ref ps) = persist_storage {
         let mut ctx = base_ctx();
         ctx.insert("persistence", ps);
-        let h = tera.render("persistence_storage.h", &ctx)?;
-        let c = tera.render("persistence_storage.c", &ctx)?;
+        let h = tera.render("storage/persistence_storage.h", &ctx)?;
+        let c = tera.render("storage/persistence_storage.c", &ctx)?;
         write_generated(output_dir.join("storage/persistence_storage.h"), h)?;
         write_generated(output_dir.join("storage/persistence_storage.c"), c)?;
         log::info!("Generated storage/persistence_storage.h/.c ({} keys)", ps.num_keys);
@@ -290,9 +290,9 @@ pub fn generate(
         ctx.insert("no_events", &no_events);
 
         let h = tera
-            .render("dm.h", &ctx)
+            .render("api/dm.h", &ctx)
             .map_err(|e| {
-                let mut msg = format!("Failed to render dm.h: {e}");
+                let mut msg = format!("Failed to render api/dm.h: {e}");
                 let mut src = e.source();
                 while let Some(s) = src {
                     msg.push_str(&format!("\n  caused by: {s}"));
@@ -301,9 +301,9 @@ pub fn generate(
                 msg
             })?;
         let c = tera
-            .render("dm.c", &ctx)
+            .render("api/dm.c", &ctx)
             .map_err(|e| {
-                let mut msg = format!("Failed to render dm.c: {e}");
+                let mut msg = format!("Failed to render api/dm.c: {e}");
                 let mut src = e.source();
                 while let Some(s) = src {
                     msg.push_str(&format!("\n  caused by: {s}"));
@@ -332,10 +332,10 @@ pub fn generate(
             ctx.insert("helpers", &helpers);
             ctx.insert("has_string_helpers", &has_string_helpers);
             ctx.insert("has_enum_helpers", &has_enum_helpers);
-            let h = tera.render("dm_helpers.h", &ctx)?;
+            let h = tera.render("api/dm_helpers.h", &ctx)?;
             write_generated(output_dir.join("api/dm_helpers.h"), h)?;
             if has_string_helpers {
-                let c = tera.render("dm_helpers.c", &ctx)?;
+                let c = tera.render("api/dm_helpers.c", &ctx)?;
                 write_generated(output_dir.join("api/dm_helpers.c"), c)?;
             }
             log::info!(
@@ -357,7 +357,7 @@ pub fn generate(
         ctx.insert("no_events", &no_events);
         ctx.insert("has_persistence", &has_persistence);
         ctx.insert("persistence_entries", &persist_test_entries);
-        let test_c = tera.render("test_dm.c", &ctx)?;
+        let test_c = tera.render("test/test_dm.c", &ctx)?;
         write_generated(output_dir.join("test/test_dm.c"), test_c)?;
         let cmake = tera.render("CMakeLists.txt", &ctx)?;
         write_generated(output_dir.join("CMakeLists.txt"), cmake)?;
@@ -387,13 +387,13 @@ fn generate_tinyfsm_events(
 
     let mut hpp_ctx = base_ctx();
     hpp_ctx.insert("groups", &groups);
-    let hpp = tera.render("dm_key_events.hpp", &hpp_ctx)?;
+    let hpp = tera.render("api/dm_key_events.hpp", &hpp_ctx)?;
     write_generated(output_dir.join("api/dm_key_events.hpp"), hpp)?;
 
     let mut wrap_ctx = base_ctx();
     wrap_ctx.insert("events", &events);
-    let wrapper_h = tera.render("dm_key_events_wrapper.hpp", &wrap_ctx)?;
-    let wrapper_c = tera.render("dm_key_events_wrapper.cpp", &wrap_ctx)?;
+    let wrapper_h = tera.render("api/dm_key_events_wrapper.hpp", &wrap_ctx)?;
+    let wrapper_c = tera.render("api/dm_key_events_wrapper.cpp", &wrap_ctx)?;
     write_generated(output_dir.join("api/dm_key_events_wrapper.hpp"), wrapper_h)?;
     write_generated(output_dir.join("api/dm_key_events_wrapper.cpp"), wrapper_c)?;
 
@@ -544,7 +544,7 @@ struct HelperEntry {
     helper_name: String,
     /// C type for the value (e.g. "uint16_t", "bool")
     c_type: String,
-    /// dm_val_t union field (e.g. "u16val", "bval") — empty for strings
+    /// DM_VAL_T union field (e.g. "u16val", "bval") — empty for strings
     val_field: String,
     /// True for string-type keys
     is_string: bool,

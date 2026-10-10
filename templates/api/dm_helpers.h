@@ -31,13 +31,13 @@ DM_RETURN_CODE DM_Set_{{ h.helper_name }}(const char *val);
 {% else %}
 static inline {{ h.c_type }} DM_Get_{{ h.helper_name }}(void)
 {
-    dm_val_t val = DM_GetValComType({{ h.define_name }});
+    DM_VAL_T val = DM_GetValComType({{ h.define_name }});
     return {% if h.is_enum %}({{ h.c_type }})val.{{ h.val_field }}{% else %}val.{{ h.val_field }}{% endif %};
 }
 {% if not h.is_read_only %}
 static inline DM_RETURN_CODE DM_Set_{{ h.helper_name }}({{ h.c_type }} x)
 {
-    dm_val_t val = { 0 };
+    DM_VAL_T val = { 0 };
     val.{{ h.val_field }} = {% if h.is_enum %}({{ h.storage_c_type }})x{% else %}x{% endif %};
     return DM_SetValComType({{ h.define_name }}, val);
 }
