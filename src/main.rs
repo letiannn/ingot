@@ -14,8 +14,7 @@ mod model;
 /// systems. Uses compile-time perfect hashing for O(1) key lookup with
 /// minimal RAM/ROM footprint.
 ///
-/// Supported targets: STM32 (32-bit), ESP32 (Xtensa/RISC-V), 8-bit
-/// microcontrollers, and 64-bit Linux systems.
+/// Supported targets: baremetal, freertos, rtthread, linux, rust.
 #[derive(Parser, Debug)]
 #[command(name = "ingot", version, about, long_about)]
 struct Cli {
@@ -27,8 +26,8 @@ struct Cli {
     #[arg(short, long, default_value = "generated")]
     output: PathBuf,
 
-    /// Target platform
-    #[arg(short, long, value_enum, default_value_t = Target::Linux64)]
+    /// Target platform (OS/RTOS)
+    #[arg(short, long, value_enum, default_value_t = Target::Linux)]
     target: Target,
 
     /// Disable event callback generation
@@ -71,16 +70,14 @@ struct Cli {
 
 #[derive(clap::ValueEnum, Clone, Debug, PartialEq, Eq)]
 enum Target {
-    /// 32-bit ARM STM32 microcontrollers (bare-metal)
-    Stm32,
-    /// ESP32 Xtensa-based (FreeRTOS)
-    EspXtensa,
-    /// ESP32 RISC-V based (FreeRTOS)
-    EspRiscv,
-    /// 8-bit microcontrollers (bare-metal)
-    Mcu8bit,
-    /// 64-bit Linux systems
-    Linux64,
+    /// Bare-metal (no RTOS, no mutex)
+    Baremetal,
+    /// FreeRTOS (semaphore-based mutex)
+    FreeRtos,
+    /// RT-Thread (rt_mutex-based mutex)
+    RtThread,
+    /// Linux (pthread mutex)
+    Linux,
     /// Rust data model (no_std, perfect-hash static storage) instead of C
     Rust,
 }
@@ -273,11 +270,10 @@ fn run(cli: &Cli) -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let target = match cli.target {
-        Target::Stm32 => codegen::target::Target::Stm32,
-        Target::EspXtensa => codegen::target::Target::EspXtensa,
-        Target::EspRiscv => codegen::target::Target::EspRiscv,
-        Target::Mcu8bit => codegen::target::Target::Mcu8bit,
-        Target::Linux64 => codegen::target::Target::Linux64,
+        Target::Baremetal => codegen::target::Target::Baremetal,
+        Target::FreeRtos => codegen::target::Target::FreeRtos,
+        Target::RtThread => codegen::target::Target::RtThread,
+        Target::Linux => codegen::target::Target::Linux,
         Target::Rust => unreachable!("handled above"),
     };
     let target_config = codegen::target::TargetConfig::for_target(target);

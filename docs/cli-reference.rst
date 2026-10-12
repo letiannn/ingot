@@ -24,7 +24,7 @@ Output & Target
 Option                  Default       Description
 ======================  ============  ==========================================
 ``-o, --output <DIR>``  ``generated/``  Output directory for generated C code
-``-t, --target <T>``    ``linux64``   Target platform (see below)
+``-t, --target <T>``    ``linux``     Target platform (see below)
 ``--no-events``         off           Disable event callback generation
 ======================  ============  ==========================================
 
@@ -79,11 +79,10 @@ Targets
 ===============  ==================  ====================  ==============================
 Value            Platform            Mutex                 Notes
 ===============  ==================  ====================  ==============================
-``stm32``        32-bit ARM STM32    None (bare-metal)     4-byte alignment
-``esp-xtensa``   ESP32 Xtensa        FreeRTOS semaphore    ``xSemaphoreTake``/``Give``
-``esp-riscv``    ESP32 RISC-V        FreeRTOS semaphore    ``xSemaphoreTake``/``Give``
-``mcu8bit``      8-bit MCU           None (bare-metal)     1-byte alignment, 16-bit pointers
-``linux64``      64-bit Linux        pthread mutex         ``PTHREAD_MUTEX_INITIALIZER``
+``baremetal``    Bare-metal          None                  32-bit, 4-byte alignment
+``freertos``     FreeRTOS            FreeRTOS semaphore    ``xSemaphoreTake``/``Give``
+``rtthread``     RT-Thread           RT-Thread mutex       ``rt_mutex_take``/``release``
+``linux``        64-bit Linux        pthread mutex         ``PTHREAD_MUTEX_INITIALIZER``
 ===============  ==================  ====================  ==============================
 
 Thread-safe keys are protected by the target's mutex mechanism. Keys without
@@ -95,11 +94,11 @@ Examples
 
 Generate from a single model file::
 
-    ingot -m device.toml -o src/dm/ -t stm32
+    ingot -m device.toml -o src/dm/ -t baremetal
 
 Merge a directory of namespace TOML files::
 
-    ingot -m models/ -o gen/udm -t linux64
+    ingot -m models/ -o gen/udm -t linux
 
 Merge files from multiple locations::
 

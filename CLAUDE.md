@@ -33,7 +33,7 @@ src/
     key.rs             - 32-bit key encoding/decoding
     validation.rs      - Model validation passes
   codegen/             - C code generation
-    target.rs          - Target platform configs (STM32, ESP, 8-bit, Linux)
+    target.rs          - Target platform configs (baremetal, FreeRTOS, RT-Thread, Linux)
     storage/           - Per-type storage generators (bool, int, string, binary)
   hash/                - Perfect hash implementation
     jenkins.rs         - Jenkins lookup3.c final() hash

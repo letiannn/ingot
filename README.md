@@ -27,11 +27,10 @@ hashing -- no dynamic memory, no collisions, no linear search.
 
 | Target | Pointer | Mutex | Alignment |
 |--------|---------|-------|-----------|
-| STM32 (32-bit ARM) | 32-bit | bare-metal | 4-byte |
-| ESP32 Xtensa | 32-bit | FreeRTOS | 4-byte |
-| ESP32 RISC-V | 32-bit | FreeRTOS | 4-byte |
-| 8-bit MCU | 16-bit | bare-metal | 1-byte |
-| Linux (64-bit) | 64-bit | pthread | 8-byte |
+| baremetal | 32-bit | none | 4-byte |
+| freertos | 32-bit | FreeRTOS | 4-byte |
+| rtthread | 32-bit | RT-Thread | 4-byte |
+| linux | 64-bit | pthread | 8-byte |
 
 ## Building
 
@@ -43,16 +42,16 @@ cargo build --release
 
 ```sh
 # 将path/to/model.toml文件生成C代码
-ingot --model path/to/model.toml --output generated/ --target stm32
+ingot --model path/to/model.toml --output generated/ --target baremetal
 
 # 将examples/battery.toml文件生成C代码
-target/debug/ingot --model examples/battery.toml --output generated/ --target esp-riscv --no-events
+target/debug/ingot --model examples/battery.toml --output generated/ --target freertos --no-events
 
 # 将examples目录下的所有toml文件生成C代码
-target/release/ingot --model examples/ --output generated/ --target esp-riscv --no-events
+target/release/ingot --model examples/ --output generated/ --target freertos --no-events
 
 # 生成linux平台代码并运行unity测试
-target/release/ingot --model examples/ --output generated/ --target linux64 --no-events
+target/release/ingot --model examples/ --output generated/ --target linux --no-events
 cmake -S generated/ -B build/ -DUNITY_DIR=../deps/unity/src && cmake --build build/ && ./build/test_dm
 ```
 
@@ -61,7 +60,7 @@ Options:
 ```
 --model <path>     Path to TOML data model specification (required)
 --output <dir>     Output directory for generated C code (default: generated/)
---target <target>  Target platform: stm32, esp-xtensa, esp-riscv, mcu8bit, linux64
+--target <target>  Target platform: baremetal, freertos, rtthread, linux
 --no-events        Disable event callback generation
 --emit-tinyfsm     Also emit C++/tinyfsm event structs + dispatch-by-key wrapper
                    (opt-in, additive; independent of --no-events)

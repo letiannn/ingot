@@ -1,0 +1,21 @@
+{
+    "name": "toml2code (ingot转c代码)",
+    "download_name": "toml2code",
+    "description": "文件夹导入，内部可存放多个 TOML",
+    "type": "exe",
+    "category": "",
+    "entry": "ingot",
+    "entry_type": "exe",
+    "icon": "💾",
+    "params": [
+        { "name": "target", "label": "目标平台", "type": "select", "default": "free-rtos",
+          "options": [
+              { "value": "baremetal", "label": "Bare Metal" },
+              { "value": "free-rtos", "label": "FreeRTOS" },
+              { "value": "rt-thread", "label": "RT-Thread" },
+              { "value": "linux", "label": "Linux" }
+          ]}
+    ],
+    "input": { "extensions": [".toml"], "description": "多文件上传，支持多个 TOML 模型文件" },
+    "output": { "extension": ".zip", "description": "生成的 C 代码压缩包" }
+}

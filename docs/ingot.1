@@ -65,26 +65,22 @@ Default: \fBgenerated/\fR.
 .BI \-t ", " \-\-target " " target
 Target platform for code generation.
 Affects mutex type, alignment, and pointer width.
-Default: \fBlinux64\fR.
+Default: \fBlinux\fR.
 .RS
 .TP
-.B stm32
-32-bit ARM STM32 microcontrollers.
-Bare-metal (no mutex), 4-byte alignment.
+.B baremetal
+Bare-metal (no RTOS, no mutex).
+32-bit pointers, 4-byte alignment.
 .TP
-.B esp\-xtensa
-ESP32 Xtensa-based SoCs.
-FreeRTOS semaphore mutex.
+.B freertos
+FreeRTOS targets.
+Semaphore-based mutex via \fBxSemaphoreTake\fR/\fBxSemaphoreGive\fR.
 .TP
-.B esp\-riscv
-ESP32 RISC-V based SoCs.
-FreeRTOS semaphore mutex.
+.B rtthread
+RT-Thread targets.
+Mutex via \fBrt_mutex_take\fR/\fBrt_mutex_release\fR.
 .TP
-.B mcu8bit
-8-bit microcontrollers.
-Bare-metal (no mutex), 1-byte alignment, 16-bit pointers.
-.TP
-.B linux64
+.B linux
 64-bit Linux systems.
 pthread mutex with PTHREAD_MUTEX_INITIALIZER.
 .RE
@@ -195,11 +191,11 @@ test_dm.c	Unity test suite
 CMakeLists.txt	CMake build configuration for tests
 .TE
 .SH EXAMPLES
-Generate C code for a data model targeting STM32:
+Generate C code for a data model targeting bare-metal:
 .PP
 .RS
 .nf
-ingot --model device.toml --output src/dm/ --target stm32
+ingot --model device.toml --output src/dm/ --target baremetal
 .fi
 .RE
 .PP
@@ -215,7 +211,7 @@ Merge a directory of namespace TOML files:
 .PP
 .RS
 .nf
-ingot -m models/ -o gen/udm -t linux64
+ingot -m models/ -o gen/udm -t linux
 .fi
 .RE
 .PP
